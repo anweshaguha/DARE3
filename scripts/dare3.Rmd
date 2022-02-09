@@ -64,7 +64,7 @@ ggplot(data=mean, aes(x=treat, y=meansat10)) +
           theme_pander(base_size = 18) +
           xlab("Assigned treatment status") + scale_y_continuous("")
 ```
-There is no meaningful differences in the average post-test reading comprehension scores of students who were assigned to participate in the READE180 intervention with those who were not. The height of the treated group column is slightly higher than the control group column, but the difference is minor and can be due to sampling indiosyncrasy. 
+There is no meaningful differences in the average post-test reading comprehension scores of students who were assigned to participate in the READE180 intervention with those who were not. The height of the treated group column is slightly higher than the control group column, but the difference is minor and can be due to sampling idiosyncrasy. 
 
 **B3.** Estimate Intent-to-Treat estimates of being assigned to participate in an after-school READ180 intervention. Present these results in a table and an accompanying write-up as you would report these in an academic paper in 1 paragraph. What differences are there in the results you estimated in response to this question and those for question B2?
 
