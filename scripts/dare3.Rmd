@@ -1,0 +1,110 @@
+---
+title: "Kim, Capotosto, Hartry & Fitzgerald (2011) Analysis and Replication"
+author: "Anwesha Guha, Merly Klaas, Thuy Nguyen"
+date: "2/8/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(pacman)
+p_load(here, tidyverse, DT, ggplot2, xaringan, knitr, kableExtra, modelsummary, rio, stargazer, xaringanthemer, ggthemes, fixest, haven, arsenal)
+
+```
+
+```{r load data}
+dare3 <- import(here("data","EDLD_650_DARE_3.csv"))
+```
+
+**A. Baseline randomization checks**
+
+**A1.** Create a table comparing the baseline characteristics (family income, gender, test score) for students assigned to the treatment and control conditions. Assess and describe whether the randomization process generated identical treatment and control conditions. Describe the results of your assessment in 1-2 sentences. If it did not (or if it had not), would this invalidate the causal claims of the study? Why or why not?
+```{r initial baseline table}
+random <- arsenal::tableby(treat ~ frpl + female + dorf, dare3)
+summary(random)
+```
+
+```{r prettier baseline table}
+treatment <- tableby(treat ~ frpl + female + dorf, 
+                     numeric.stats=c("meansd"), cat.stats=c("N", "countpct"), 
+                     digits=2, data=dare3)
+
+mylabels <- list(frpl = "Free/Reduced Price Lunch", female="Prop. Female", dorf="Baseline DIBELS")
+
+summary(treatment, 
+        labelTranslations = mylabels, 
+        title='Descriptive statistics by assigned treatment')
+```
+
+While data is not large, can still use an omnibus F test for balance:
+```{r}
+summary(lm(treat ~ frpl + female + dorf, data=dare3))
+```
+
+**B. Replication and Extension**
+
+**B1.** Estimate the bivariate relationship between students’ final reading comprehension outcomes and their attendance rate (proportion of days attended) in a seven-month READ180 program. Present these results in a table with an accompanying discussion of what these results show and whether they should be understood as the causal effect of READ180 on reading comprehension outcomes in 1 paragraph.
+```{r}
+
+```
+
+
+**B2.** Compare the average post-test reading comprehension scores of students who were assigned to participate in the READ180 intervention with those who were not. Present a figure comparing these mean differences. Is the difference in these scores meaningful and does the difference reflect anything other than sampling idiosyncrasy?
+```{r}
+
+```
+
+
+**B3.** Estimate Intent-to-Treat estimates of being assigned to participate in an after-school READ180 intervention. Present these results in a table and an accompanying write-up as you would report these in an academic paper in 1 paragraph. What differences are there in the results you estimated in response to this question and those for question B2?
+
+First, visualize ITT effects.
+```{r}
+mean_data <- dare3 %>% 
+        group_by(treat) %>% 
+        summarize(mean_sat10_compreh = mean(sat10_compreh))
+
+ggplot(data=mean_data, aes(x=treat, y=mean_sat10_compreh)) + 
+          geom_col(fill="#e64173", alpha=0.4) + 
+          theme_minimal() +
+          xlab("Assigned treatment status") + scale_y_continuous("Comprehension Test")
+```
+
+Then, estimate the models.
+```{r}
+# Estimate the models
+itt1 <- lm(sat10_compreh ~ treat, data=dare3)
+itt2 <- lm(sat10_compreh ~ treat + frpl + female + dorf, data=dare3)
+itt3 <- lm(sat10_compreh ~ treat + frpl + female + dorf + 
+             as.factor(school), data=dare3)
+```
+
+```{r}
+# Create a decent-looking table
+
+# Create a row indicating FEs
+row <- tribble(~term,          ~'1',  ~'2', ~'3', 
+                 'School Fixed Effects', 'No', 'No', 'Yes')
+attr(row, 'position') <- c(7)
+  
+# Produce the table; can export to markdown, tex, etc. by changing the type
+modelsummary(list(itt1, itt2, itt3), 
+               title = "Table 1. Intent-to-Treat Estimates of READ180 on Test of Comprehension",
+               stars=c('*' = 0.05, '**' = 0.01, '***' = 0.001),
+               coef_omit = "(Intercept)|as.factor",
+            #   coef_rename = c("won_lottry" = "Won Lottery", "base_age" = "Starting Age", "male" = "Male"),
+               estimate = "{estimate}{stars}",
+               gof_omit= "Adj|Pseudo|Log|Within|AIC|BIC|FE|Std|R2|F",
+               add_rows = row,
+               threeparttable= T,
+          #     notes = c("Notes: The table displays coefficients from Equation X and standard errors in parentheses."),
+               type='html')
+```
+
+
+**B4.** Identify the effects of full participation in a seven month after-school READ180 reading intervention. In other words: what are the effects of 100 percent attendance in a seven-month reading program, compared to not attending at all? Describe the model you estimate, its accompanying assumptions and defend the extent to which these assumptions are met in your analysis. Present these results in a table and an accompanying write-up as you would report these in an academic paper in 2-3 paragraphs.
+```{r}
+
+```
+
+
+**B5.** Write a discussion paragraph in which you present the substantive conclusions (and limitations) of your results about the effects of the after-school READ180 intervention you have documented.
