@@ -45,9 +45,13 @@ summary(lm(treat ~ frpl + female + dorf, data=dare3))
 
 **B1.** Estimate the bivariate relationship between students’ final reading comprehension outcomes and their attendance rate (proportion of days attended) in a seven-month READ180 program. Present these results in a table with an accompanying discussion of what these results show and whether they should be understood as the causal effect of READ180 on reading comprehension outcomes in 1 paragraph.
 ```{r}
-
+ols1 <- lm(sat10_compreh ~ read180_attend, data = dare3)
+summary(ols1)
+stargazer(ols1, type='html', omit.stat = c("ser", "adj.rsq", "f"), 
+          dep.var.caption="", dep.var.labels.include=F, omit=c("Constant"), 
+          star.cutoffs=c(0.05, 0.01, 0.001), notes.align="l")
 ```
-
+It is likely to have endogenous differences in the expected outcomes between children who attended after-school program at a high rate  and those attended at a lower rate. The OLS estimate of the predictor read180_attend is likely to be correlated with the residuals in the outcome test score sat10_compreh. 
 
 **B2.** Compare the average post-test reading comprehension scores of students who were assigned to participate in the READ180 intervention with those who were not. Present a figure comparing these mean differences. Is the difference in these scores meaningful and does the difference reflect anything other than sampling idiosyncrasy?
 ```{r}
