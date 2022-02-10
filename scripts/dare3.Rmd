@@ -3,12 +3,12 @@ title: "Kim, Capotosto, Hartry & Fitzgerald (2011) Analysis and Replication"
 author: "Anwesha Guha, Merly Klaas, Thuy Nguyen"
 date: "2/8/2022"
 output:
+  pdf_document: default
   html_document:
     toc: yes
     toc_float: yes
     highlight: espresso
     code_folding: hide
-  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -211,7 +211,7 @@ modelsummary(mod2,
              stars=c('*' = 0.05, '**' = 0.01, '***' = 0.001),
              coef_omit = "Int|female|dorf|frpl",
              gof_omit= "Adj|Pseudo|Log|Within|AIC|BIC|FE|Std|R2|F|Int",
-             coef_rename = c("fit_read180_attend" = "READ180 attendace", "read180_attend" = "READ180 attendace", "dorf" = "Prestest Score", "frpl" = "Eligible for free lunch", "female" = "Female", "treat" = "Random Offer to READ180"),
+             coef_rename = c("fit_read180_attend" = "READ180 attendance", "read180_attend" = "READ180 attendance", "dorf" = "Prestest Score", "frpl" = "Eligible for free lunch", "female" = "Female", "treat" = "Random Offer to READ180"),
              add_rows = row2,
              threeparttable= T,
              notes = c("The table displays coefficients from Equation X and standard errors in parentheses.")
