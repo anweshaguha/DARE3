@@ -168,7 +168,7 @@ mods[['(4)']] <- tot4
 
 row <- tribble(~term,          ~'(1)',  ~'(2)', ~'(3)', ~'(4)',
                'School FE', 'No', 'No', 'Yes', 'Yes')
-attr(row, 'position') <- c(7)
+attr(row, 'position') <- c(9)
 
 modelsummary(mods,
              title = "Table 2. Instrumental variable estimates of attending READ 180 Intervention on Test Scores due to random assignment to after-school READ180 intervention",
