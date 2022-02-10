@@ -2,11 +2,21 @@
 title: "Kim, Capotosto, Hartry & Fitzgerald (2011) Analysis and Replication"
 author: "Anwesha Guha, Merly Klaas, Thuy Nguyen"
 date: "2/8/2022"
-output: html_document
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    highlight: espresso
+    code_folding: hide
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
 library(pacman)
 p_load(here, tidyverse, DT, ggplot2, xaringan, knitr, kableExtra, modelsummary, rio, stargazer, xaringanthemer, ggthemes, fixest, haven, arsenal)
 
@@ -44,13 +54,18 @@ summary(lm(treat ~ frpl + female + dorf, data=dare3))
 **B. Replication and Extension**
 
 **B1.** Estimate the bivariate relationship between students’ final reading comprehension outcomes and their attendance rate (proportion of days attended) in a seven-month READ180 program. Present these results in a table with an accompanying discussion of what these results show and whether they should be understood as the causal effect of READ180 on reading comprehension outcomes in 1 paragraph.
+
 ```{r}
-ols1 <- lm(sat10_compreh ~ read180_attend, data = dare3)
-summary(ols1)
-stargazer(ols1, type='html', omit.stat = c("ser", "adj.rsq", "f"), 
-          dep.var.caption="", dep.var.labels.include=F, omit=c("Constant"), 
+ols1 <- lm(sat10_compreh ~ read180_attend, data = dare3) 
+
+ols2 <- lm(sat10_compreh ~ read180_attend + dorf + female + frpl, data = dare3)
+summary(ols2)
+
+stargazer(ols1, type='html', omit.stat = c("ser", "adj.rsq", "f"),
+          dep.var.caption="", dep.var.labels.include=F, omit=c("Constant"),
           star.cutoffs=c(0.05, 0.01, 0.001), notes.align="l")
 ```
+
 It is likely to have endogenous differences in the expected outcomes between children who attended after-school program at a high rate  and those attended at a lower rate. The OLS estimate of the predictor read180_attend is likely to be correlated with the residuals in the outcome test score sat10_compreh. 
 
 
@@ -64,6 +79,7 @@ ggplot(data=mean, aes(x=treat, y=meansat10)) +
           theme_pander(base_size = 18) +
           xlab("Assigned treatment status") + scale_y_continuous("")
 ```
+
 There is no meaningful differences in the average post-test reading comprehension scores of students who were assigned to participate in the READE180 intervention with those who were not. The height of the treated group column is slightly higher than the control group column, but the difference is minor and can be due to sampling idiosyncrasy. 
 
 **B3.** Estimate Intent-to-Treat estimates of being assigned to participate in an after-school READ180 intervention. Present these results in a table and an accompanying write-up as you would report these in an academic paper in 1 paragraph. What differences are there in the results you estimated in response to this question and those for question B2?
@@ -113,9 +129,100 @@ modelsummary(list(itt1, itt2, itt3),
 
 
 **B4.** Identify the effects of full participation in a seven month after-school READ180 reading intervention. In other words: what are the effects of 100 percent attendance in a seven-month reading program, compared to not attending at all? Describe the model you estimate, its accompanying assumptions and defend the extent to which these assumptions are met in your analysis. Present these results in a table and an accompanying write-up as you would report these in an academic paper in 2-3 paragraphs.
+
+
 ```{r}
+# Instrument with no covariates
+tot1 <- feols(sat10_compreh ~ 1 | read180_attend ~ treat, data=dare3)
+
+# Instrument with covariates
+
+tot2 <- feols(sat10_compreh ~ dorf + frpl + female | 
+                read180_attend ~ treat, data=dare3)
+
+#Include school fixed effects
+
+tot3 <- feols(sat10_compreh ~ dorf + frpl + female  | as.factor(school) | 
+                read180_attend ~ treat, 
+              vcov = "iid",  data=dare3)
+
+# Cluster-robust standard errors
+tot4 <- feols(sat10_compreh ~ dorf + frpl + female  | as.factor(school) | 
+                read180_attend ~ treat, 
+              vcov = ~ school, data=dare3)
+
+summary(tot2)
+
+
+```
+```{r}
+# Build a table of IV estimates
+# Estimation for attendance according to Kim et.al paper 
+
+
+mods <- list()
+mods[['(1)']] <- tot1
+mods[['(2)']] <- tot2
+mods[['(3)']] <- tot3
+mods[['(4)']] <- tot4
+
+row <- tribble(~term,          ~'(1)',  ~'(2)', ~'(3)', ~'(4)',
+               'School FE', 'No', 'No', 'Yes', 'Yes')
+attr(row, 'position') <- c(7)
+
+modelsummary(mods,
+             title = "Table 2. Instrumental variable estimates of attending READ 180 Intervention on Test Scores due to random assignment to after-school READ180 intervention",
+             stars=c('*' = 0.05, '**' = 0.01, '***' = 0.001),
+             coef_omit = "Int",
+             gof_omit= "Adj|Pseudo|Log|Within|AIC|BIC|FE|Std|R2|F|Int",
+             coef_rename = c("fit_read180_attend" = "READ180 attendace", "dorf" = "Prestest Score", "frpl" = "Eligible for free lunch", "female" = "Female"),
+             add_rows = row,
+             threeparttable= T,
+             notes = c("The table displays coefficients from Equation X and standard errors in parentheses. Model 4 uses cluster-robust standard errors at school level.")
+              ) 
+```
+
+Table 2 presents treatment-on-the treated (OTT) estimate of attending READ 180 enterprise on students reading achievement. We used the two stage least-square (2SLS) approach to obtain an Instrumental Variable estimate using the exogenous assignment of offer to participate (*intent to treat*) in READ 180 intervention program as our instrument. In the first-stage we estimate the predicted values of potentially endegonous predictor. After comparing our F statistics of 1,654 and the cutoff of 10, we confident that this instrument is strong. Then, on the second stage, we used the newly predicted values to estimate the effect of attending READ 180 on reading achivement. 
+
+In model 1, when we did not control for any covariate, we found a gain of 11 points for students who participated in READ 180 program, while after including students background characteristics such as eligibility for free lunch status, sex, and pre-test scores, we found 1.2 point less increase on reading score. The similiar estimation of 10.2 points increase was also found in model 3 and 4 when we accounted for school fixed effects and clustering standard errors at the level of randomization (within school). 
+
+
+```{r}
+mod2 <- list()
+mod2[['(1)']] <- ols2
+mod2[['(2)']] <- itt2
+mod2[['(3)']] <- tot1
+mod2[['(4)']] <- tot2
+mod2[['(5)']] <- tot4
+
+
+
+row2 <- tribble(~term,          ~'(1)',  ~'(2)', ~'(3)', ~'(4)', ~'(5)',
+                ' ', 'OLS', 'ITT', 'TOT', 'TOT', 'TOT',
+                'School FE', 'No', 'No', 'No', 'No', 'Yes', 
+                'Student Chars.', 'Yes', 'Yes', 'No', 'Yes', 'Yes',
+                'Clust. SEs', 'No', 'No', 'No', 'No', 'Yes'
+                )  
+
+attr(row2, 'position') <- c(1, 6,7,8)
+
+modelsummary(mod2,
+             title = "Table 3. Comparison of OLS, ITT and IV estimates of Full Attendance of READ180 intervention on Post-test scores due to random offer to participate in READ180",
+             stars=c('*' = 0.05, '**' = 0.01, '***' = 0.001),
+             coef_omit = "Int|female|dorf|frpl",
+             gof_omit= "Adj|Pseudo|Log|Within|AIC|BIC|FE|Std|R2|F|Int",
+             coef_rename = c("fit_read180_attend" = "READ180 attendace", "read180_attend" = "READ180 attendace", "dorf" = "Prestest Score", "frpl" = "Eligible for free lunch", "female" = "Female", "treat" = "Random Offer to READ180"),
+             add_rows = row2,
+             threeparttable= T,
+             notes = c("The table displays coefficients from Equation X and standard errors in parentheses.")
+              ) 
 
 ```
 
 
+
 **B5.** Write a discussion paragraph in which you present the substantive conclusions (and limitations) of your results about the effects of the after-school READ180 intervention you have documented.
+
+
+
+The estimates of the endogenous relationship between attending READ 180 Enterprise Intervention program to improve the reading achievement of Low-Performing Elementary School Students (Model 1) imply that students reading achievement who attended Read 180 program are 9 points higher than those who are not. In Model 2, we present results of being randomly assigned to attend READ 180 instead of the traditional after-school program. We found that the offer of attending READ 180 program increased reading test scores about 8 points. Finally, Models 3-5 present a taxonomy of Treatment-on-the-Treated estimates in which we use the randomized assignment to READ 180 program as an instrument to estimate impact on attending READ 180 on students reading achivement. We found consistent effects of attending READ 180 Intervention on the increased reading achievement score for about 10 scaled score points. These models are robust to the inclusion of baseline student characteristics, school fixed effects, and the clustering of standard errors at the level of randomization (within school). 
