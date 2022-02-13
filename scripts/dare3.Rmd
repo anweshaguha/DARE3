@@ -64,7 +64,7 @@ ols2 <- lm(sat10_compreh ~ read180_attend + dorf + female + frpl, data = dare3)
 ```
 
 
-```{r message=FALSE, warning=FALSE, results='asis'}
+```{r results='asis'}
 
 
 stargazer(ols1, ols2, type='latex', 
@@ -75,7 +75,8 @@ stargazer(ols1, ols2, type='latex',
           covariate.labels = c("READ180 attendance", "Pre-test Score", "Female", "Eligibity for Free Lunch"),
           out="table1.txt",
           omit=c("Constant"),
-          star.cutoffs=c(0.05, 0.01, 0.001), notes.align="l")
+          star.cutoffs=c(0.05, 0.01, 0.001), notes.align="l",
+         header = FALSE)
 ```
 
 It is likely to have endogenous differences in the expected outcomes between children who attended after-school program at a high rate  and those attended at a lower rate. The OLS estimate of the predictor read180_attend is likely to be correlated with the residuals in the outcome test score sat10_compreh. 
