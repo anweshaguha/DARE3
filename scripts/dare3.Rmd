@@ -64,10 +64,17 @@ ols2 <- lm(sat10_compreh ~ read180_attend + dorf + female + frpl, data = dare3)
 ```
 
 
-```{r}
-summary(ols2)
-stargazer(ols1, type='html', omit.stat = c("ser", "adj.rsq", "f"),
-          dep.var.caption="", dep.var.labels.include=F, omit=c("Constant"),
+```{r message=FALSE, warning=FALSE, results='asis'}
+
+
+stargazer(ols1, ols2, type='latex', 
+          omit.stat = c("ser", "adj.rsq", "f"),
+          title = "Naïve OLS estimates of attending READ 180 program on Reading outcome",
+          dep.var.caption="", 
+          dep.var.labels.include=F, 
+          covariate.labels = c("READ180 attendance", "Pre-test Score", "Female", "Eligibity for Free Lunch"),
+          out="table1.txt",
+          omit=c("Constant"),
           star.cutoffs=c(0.05, 0.01, 0.001), notes.align="l")
 ```
 
@@ -91,7 +98,7 @@ It appears that there is no meaningful differences in the average post-test read
 
 **B3.** Estimate Intent-to-Treat estimates of being assigned to participate in an after-school READ180 intervention. Present these results in a table and an accompanying write-up as you would report these in an academic paper in 1 paragraph. What differences are there in the results you estimated in response to this question and those for question B2?
 
-```{r}
+```{r echo=TRUE}
 # Estimate the models
 itt1 <- lm(sat10_compreh ~ treat, data=dare3)
 itt2 <- lm(sat10_compreh ~ treat + frpl + female + dorf, data=dare3)
@@ -99,7 +106,7 @@ itt3 <- lm(sat10_compreh ~ treat + frpl + female + dorf +
              as.factor(school), data=dare3)
 ```
 
-```{r results='asis'}
+```{r echo=TRUE}
 # Create a decent-looking table
 
 # Create a row indicating FEs
@@ -146,11 +153,8 @@ tot4 <- feols(sat10_compreh ~ dorf + frpl + female  | as.factor(school) |
                 read180_attend ~ treat, 
               vcov = ~ school, data=dare3)
 
-summary(tot2)
 
 
-```
-```{r}
 # Build a table of IV estimates
 # Estimation for attendance according to Kim et.al paper 
 
@@ -175,11 +179,9 @@ modelsummary(mods,
              threeparttable= T,
              notes = c("The table displays coefficients from Equation X and standard errors in parentheses. Model 4 uses cluster-robust standard errors at school level.")
               ) 
+
 ```
 
-Table 2 presents the treatment-on-the-treated (TOT) estimate of attending READ 180 enterprise on students' reading achievement. We used the two-stage least squares (2SLS) approach to obtain an Instrumental Variable estimate using the exogenous assignment of offer to participate (*intent to treat*) in READ 180 intervention program as our instrument. In the first-stage, we estimate the predicted values of potentially endegonous predictor. After comparing our F statistics of 1,654 and the cutoff of 10, we are confident that this instrument is strong. Then, in the second stage, we use the newly predicted values to estimate the effect of attending READ 180 on reading achivement. 
-
-In model 1, when we did not control for any covariate, we found a gain of 11 points for students who participated in READ 180 program, while after including students background characteristics such as eligibility for free lunch status, sex, and pre-test scores, we found a 1.2 point lower increase on the reading score. A similiar estimation of a 10.2 points increase was also found in model 3 and 4 when we accounted for school fixed effects and clustering standard errors at the level of randomization (within school). 
 
 
 ```{r}
@@ -214,9 +216,11 @@ modelsummary(mod2,
 
 ```
 
+Table 4 presents the treatment-on-the-treated (TOT) estimate of attending READ 180 enterprise on students' reading achievement. We used the two-stage least squares (2SLS) approach to obtain an Instrumental Variable estimate using the exogenous assignment of offer to participate (*intent to treat*) in READ 180 intervention program as our instrument. In the first-stage, we estimate the predicted values of potentially endogenous predictor. After comparing our F statistics of 1,654 and the cutoff of 10, we are confident that this instrument is strong. Then, in the second stage, we use the newly predicted values to estimate the effect of attending READ 180 on reading achievement. 
+
+In model 1, when we did not control for any covariate, we found a gain of 11 points for students who participated in READ 180 program, while after including students background characteristics such as eligibility for free lunch status, sex, and pre-test scores, we found a 1.2 point lower increase on the reading score. A similar estimation of a 10.2 points increase was also found in model 3 and 4 when we accounted for school fixed effects and clustering standard errors at the level of randomization (within school). 
+
+  **B5.** Write a discussion paragraph in which you present the substantive conclusions (and limitations) of your results about the effects of the after-school READ180 intervention you have documented.
 
 
-**B5.** Write a discussion paragraph in which you present the substantive conclusions (and limitations) of your results about the effects of the after-school READ180 intervention you have documented.
-
-
-The estimates of the endogenous relationship between attending READ 180 Enterprise Intervention program to improve the reading achievement of Low-Performing Elementary School Students (Model 1) imply that reading achievement for students who attended Read 180 program is 9 points higher than those who did not. In Model 2, we present results of being randomly assigned to attend READ 180 instead of the traditional after-school program. We found that the offer of attending READ 180 program increased reading test scores about 8 points. Finally, Models 3-5 present a taxonomy of TOT estimates in which we use the randomized assignment to READ 180 program as an instrument to estimate impact on attending READ 180 on students reading achievement. We found consistent effects of attending READ 180 Intervention on the increased reading achievement score for about 10 scaled score points. These models are robust to the inclusion of baseline student characteristics, school fixed effects, and the clustering of standard errors at the level of randomization (within school). 
+Table 5 displays Comparison of OLS, ITT and IV estimates of Full Attendance of READ180 intervention on Post-test scores due to random offer to participate in READ180. The estimates of the endogenous relationship between attending READ 180 Enterprise Intervention program to improve the reading achievement of Low-Performing Elementary School Students (Model 1) imply that reading achievement for students who attended Read 180 program is 9 points higher than those who did not. In Model 2, we present results of being randomly assigned to attend READ 180 instead of the traditional after-school program. We found that the offer of attending READ 180 program increased reading test scores about 8 points. Finally, Models 3-5 present a taxonomy of TOT estimates in which we use the randomized assignment to READ 180 program as an instrument to estimate impact on attending READ 180 on students reading achievement. We found consistent effects of attending READ 180 Intervention on the increased reading achievement score for about 10 scaled score points. These models are robust to the inclusion of baseline student characteristics, school fixed effects, and the clustering of standard errors at the level of randomization (within school). 
