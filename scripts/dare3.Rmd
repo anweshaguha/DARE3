@@ -31,7 +31,7 @@ dare3 <- import(here("data","EDLD_650_DARE_3.csv"))
 **A1.** Create a table comparing the baseline characteristics (family income, gender, test score) for students assigned to the treatment and control conditions. Assess and describe whether the randomization process generated identical treatment and control conditions. Describe the results of your assessment in 1-2 sentences. If it did not (or if it had not), would this invalidate the causal claims of the study? Why or why not?
 ```{r initial baseline table}
 random <- arsenal::tableby(treat ~ frpl + female + dorf, dare3)
-summary(random)
+# summary(random)
 ```
 
 
@@ -50,14 +50,14 @@ summary(treatment,
 The randomization process created identical treatment and control conditions for the baseline characteristics of free or reduced price lunch (FRPL), gender (% female), and test score (DIBELS). If these characteristics were significantly different from one group to another, the equal in expectation assumption would be violated.
 
 While data is not large, can still use an omnibus F test for balance as a different check:
-```{r}
+```{r echo=TRUE}
 summary(lm(treat ~ frpl + female + dorf, data=dare3))
 ```
 
 **B. Replication and Extension**
 
 **B1.** Estimate the bivariate relationship between students’ final reading comprehension outcomes and their attendance rate (proportion of days attended) in a seven-month READ180 program. Present these results in a table with an accompanying discussion of what these results show and whether they should be understood as the causal effect of READ180 on reading comprehension outcomes in 1 paragraph.
-```{r}
+```{r echo=TRUE}
 ols1 <- lm(sat10_compreh ~ read180_attend, data = dare3) 
 
 ols2 <- lm(sat10_compreh ~ read180_attend + dorf + female + frpl, data = dare3)
@@ -65,8 +65,6 @@ ols2 <- lm(sat10_compreh ~ read180_attend + dorf + female + frpl, data = dare3)
 
 
 ```{r results='asis'}
-
-
 stargazer(ols1, ols2, type='latex', 
           omit.stat = c("ser", "adj.rsq", "f"),
           title = "Naïve OLS estimates of attending READ 180 program on Reading outcome",
@@ -79,7 +77,7 @@ stargazer(ols1, ols2, type='latex',
          header = FALSE)
 ```
 
-In this table, there is likely to be endogenous differences in the expected outcomes between children who attended after-school program at a high rate and those attended at a lower rate. The OLS estimate of the predictor read180_attend is likely to be correlated with the residuals in the outcome test score sat10_compreh. As a result, a causal interpretation would be premature just using this table and analysis.
+In this table, there is likely to be endogenous differences in the expected outcomes between children who attended after-school program at a high rate and those attended at a lower rate. The OLS estimate of the predictor READ180 attendance is likely to be correlated with the residuals in the outcome test score. As a result, a causal interpretation would be premature just using this table and analysis.
 
 
 **B2.** Compare the average post-test reading comprehension scores of students who were assigned to participate in the READ180 intervention with those who were not. Present a figure comparing these mean differences. Is the difference in these scores meaningful and does the difference reflect anything other than sampling idiosyncrasy?
@@ -104,9 +102,19 @@ ggplot(data=dare3, aes(x=as.factor(treat), y=sat10_compreh)) +
           theme_minimal()
 ```
 
-It appears that there is no meaningful differences in the average post-test reading comprehension scores of students who were assigned to participate in the READ180 intervention with those who were not. While the mean of the treated group, or those who received the READ180 intervention, is higher, the difference could easily be attributed to sampling idiosyncrasy, as shown in the side-by-side boxplot.
+It appears that there is no meaningful differences in the average post-test reading comprehension scores of students who were assigned to participate in the READ180 intervention with those who were not. While the mean of the treated group, or those who received the READ180 intervention, is higher by about 9 points, the difference could easily be attributed to sampling idiosyncrasy, as shown in the side-by-side boxplot.
 
 **B3.** Estimate Intent-to-Treat estimates of being assigned to participate in an after-school READ180 intervention. Present these results in a table and an accompanying write-up as you would report these in an academic paper in 1 paragraph. What differences are there in the results you estimated in response to this question and those for question B2?
+
+```{r echo=TRUE}
+library(lsr)
+independentSamplesTTest(formula   = sat10_compreh ~ treat, 
+                        data      = dare3,                         
+                        var.equal = FALSE,
+                        one.sided = 1)
+```
+
+First, a preliminary simple initial t-test suggests a significant difference between the test scores two groups, t(276.03) = -2.429, p = .008, Cohen's d = 0.275.
 
 ```{r echo=TRUE}
 # Estimate the models
@@ -116,7 +124,7 @@ itt3 <- lm(sat10_compreh ~ treat + frpl + female + dorf +
              as.factor(school), data=dare3)
 ```
 
-```{r echo=TRUE}
+```{r}
 # Create a decent-looking table
 
 # Create a row indicating FEs
@@ -138,7 +146,7 @@ modelsummary(list(itt1, itt2, itt3),
                type='html')
 ```
 
-
+There are endogenous differences in the expected outcomes of those who can and do attend the READ 180 after-school program and those who do not and improve test scores anyway. This approach does not identify the effectiveness of the program as authors intend; rather, it shows the combination of the READ 180 after-school assignment and endogenous unobservables across families and individuals (compared to the observables discussed in B2).
 
 **B4.** Identify the effects of full participation in a seven month after-school READ180 reading intervention. In other words: what are the effects of 100 percent attendance in a seven-month reading program, compared to not attending at all? Describe the model you estimate, its accompanying assumptions and defend the extent to which these assumptions are met in your analysis. Present these results in a table and an accompanying write-up as you would report these in an academic paper in 2-3 paragraphs.
 
@@ -226,7 +234,7 @@ modelsummary(mod2,
 
 ```
 
-Table 4 presents the treatment-on-the-treated (TOT) estimate of attending READ 180 enterprise on students' reading achievement. We used the two-stage least squares (2SLS) approach to obtain an Instrumental Variable estimate using the exogenous assignment of offer to participate (*intent to treat*) in READ 180 intervention program as our instrument. In the first-stage, we estimate the predicted values of potentially endogenous predictor. After comparing our F statistics of 1,654 and the cutoff of 10, we are confident that this instrument is strong. Then, in the second stage, we use the newly predicted values to estimate the effect of attending READ 180 on reading achievement. 
+Table 4 presents the treatment-on-the-treated (TOT) estimate of attending the READ 180 afterschool program on students' reading achievement. We used the two-stage least squares (2SLS) approach to obtain an Instrumental Variable estimate by using the exogenous assignment of offer to participate (*intent to treat*) in READ 180 intervention program as our instrument. In the first-stage, we estimate the predicted values of potentially endogenous predictor. After comparing our F statistics of 1,654 and the cutoff of 10, we are confident that this instrument is strong. Then, in the second stage, we use the newly predicted values to estimate the effect of attending READ 180 on reading achievement. 
 
 In model 1, when we did not control for any covariate, we found a gain of 11 points for students who participated in READ 180 program, while after including students background characteristics such as eligibility for free lunch status, sex, and pre-test scores, we found a 1.2 point lower increase on the reading score. A similar estimation of a 10.2 points increase was also found in model 3 and 4 when we accounted for school fixed effects and clustering standard errors at the level of randomization (within school). 
 
