@@ -79,7 +79,7 @@ stargazer(ols1, ols2, type='latex',
          header = FALSE)
 ```
 
-It is likely to have endogenous differences in the expected outcomes between children who attended after-school program at a high rate  and those attended at a lower rate. The OLS estimate of the predictor read180_attend is likely to be correlated with the residuals in the outcome test score sat10_compreh. 
+In this table, there is likely to be endogenous differences in the expected outcomes between children who attended after-school program at a high rate and those attended at a lower rate. The OLS estimate of the predictor read180_attend is likely to be correlated with the residuals in the outcome test score sat10_compreh. As a result, a causal interpretation would be premature just using this table and analysis.
 
 
 **B2.** Compare the average post-test reading comprehension scores of students who were assigned to participate in the READ180 intervention with those who were not. Present a figure comparing these mean differences. Is the difference in these scores meaningful and does the difference reflect anything other than sampling idiosyncrasy?
@@ -89,13 +89,22 @@ mean_data <- dare3 %>%
         group_by(treat) %>% 
         summarize(mean_sat10_compreh = mean(sat10_compreh))
 
-ggplot(data=mean_data, aes(x=treat, y=mean_sat10_compreh)) + 
+#Hard to see anything meaningful here with just two columns
+ggplot(data=mean_data, aes(x=as.factor(treat), y=mean_sat10_compreh)) + 
           geom_col(fill="darkblue", alpha=0.4) + 
-          theme_pander(base_size = 18) +
-          xlab("Assigned treatment status") + scale_y_continuous("")
+          xlab("Assigned treatment status") + scale_y_continuous("") +
+          theme_minimal()
 ```
 
-It appears that there is no meaningful differences in the average post-test reading comprehension scores of students who were assigned to participate in the READE180 intervention with those who were not. The height of the treated group column is slightly higher than the control group column, but the difference is minor and could be due to sampling idiosyncrasy. 
+```{r}
+# Create plot more appropriate for a continuous outcome
+ggplot(data=dare3, aes(x=as.factor(treat), y=sat10_compreh)) + 
+          geom_boxplot(fill="darkblue", alpha=0.4) + 
+          xlab("Assigned treatment status") + scale_y_continuous("") +
+          theme_minimal()
+```
+
+It appears that there is no meaningful differences in the average post-test reading comprehension scores of students who were assigned to participate in the READ180 intervention with those who were not. While the mean of the treated group, or those who received the READ180 intervention, is higher, the difference could easily be attributed to sampling idiosyncrasy, as shown in the side-by-side boxplot.
 
 **B3.** Estimate Intent-to-Treat estimates of being assigned to participate in an after-school READ180 intervention. Present these results in a table and an accompanying write-up as you would report these in an academic paper in 1 paragraph. What differences are there in the results you estimated in response to this question and those for question B2?
 
